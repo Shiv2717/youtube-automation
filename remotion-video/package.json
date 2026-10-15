@@ -1,0 +1,20 @@
+{
+  "name": "youtube-automation-remotion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cinematic Remotion renderer for the Shorts automation pipeline",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts MyComp"
+  },
+  "dependencies": {
+    "@remotion/media": "^4.0.516",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "^4.0.516"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.516",
+    "typescript": "^5.8.3"
+  }
+}
