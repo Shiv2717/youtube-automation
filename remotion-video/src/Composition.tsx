@@ -1,6 +1,6 @@
+import React from "react";
 import {
   AbsoluteFill,
-  CalculateMetadataFunction,
   Composition,
   Easing,
   interpolate,
@@ -8,212 +8,564 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { Audio } from "@remotion/media";
-import { staticFile } from "remotion";
+
+type SceneData = {
+  kicker: string;
+  headline: string;
+  highlight: string;
+  subtitle: string;
+  accent: string;
+  layout: "hero" | "steps" | "quote" | "stat";
+};
 
 type Props = {
-  title?: string;
+  title: string;
+  scenes: SceneData[];
+  accentColor: string;
+  backgroundColor: string;
 };
 
-const calculateMetadata: CalculateMetadataFunction<Props> = () => {
-  return {};
-};
-
-export const MyComposition = () => {
-  return (
-    <Composition
-      id="MyComp"
-      component={MyComponent}
-      durationInFrames={360}
-      fps={12}
-      width={720}
-      height={1280}
-      calculateMetadata={calculateMetadata}
-      defaultProps={{ title: "Even the quiet days matter." }}
-    />
-  );
-};
-
-const scenes = [
-  { sky: "#162326", ground: "#283a35", accent: "#c77c46", kind: "bakery" },
-  { sky: "#193a45", ground: "#1d3436", accent: "#e0a15d", kind: "rooftop" },
-  { sky: "#1d2925", ground: "#18231e", accent: "#a85a40", kind: "forest" },
-  { sky: "#342b28", ground: "#1d1a19", accent: "#db9d55", kind: "desk" },
+const defaultScenes: SceneData[] = [
+  {
+    kicker: "THE AI PLAYBOOK",
+    headline: "Better prompts.",
+    highlight: "Better answers.",
+    subtitle: "One small change can transform your next AI conversation.",
+    accent: "#f06a43",
+    layout: "hero",
+  },
+  {
+    kicker: "01 — GIVE IT A ROLE",
+    headline: "Set the context.",
+    highlight: "Define the goal.",
+    subtitle: "Tell the model who it should be and what success looks like.",
+    accent: "#f0a35b",
+    layout: "steps",
+  },
+  {
+    kicker: "02 — SHOW THE STANDARD",
+    headline: "Examples make",
+    highlight: "expectations clear.",
+    subtitle: "A small example can be more useful than a long explanation.",
+    accent: "#e76f51",
+    layout: "quote",
+  },
+  {
+    kicker: "03 — REFINE THE OUTPUT",
+    headline: "First draft?",
+    highlight: "Keep improving.",
+    subtitle: "Ask for gaps, assumptions, and a stronger second version.",
+    accent: "#e9b45e",
+    layout: "stat",
+  },
+  {
+    kicker: "SAVE THIS",
+    headline: "Clear input.",
+    highlight: "Stronger output.",
+    subtitle: "Follow for practical ideas you can use today.",
+    accent: "#f06a43",
+    layout: "hero",
+  },
 ];
 
-const particles = Array.from({ length: 18 }, (_, index) => ({
-  left: `${8 + ((index * 37) % 84)}%`,
-  top: `${12 + ((index * 53) % 74)}%`,
-  size: 2 + (index % 4),
-  delay: index * 7,
-}));
+export const defaultShortProps: Props = {
+  title: "A simple way to get better AI answers",
+  scenes: defaultScenes,
+  accentColor: "#f06a43",
+  backgroundColor: "#f4efe5",
+};
 
-const grainSpecks = Array.from({ length: 28 }, (_, index) => ({
-  left: `${(index * 43) % 100}%`,
-  top: `${(index * 67) % 100}%`,
-}));
+const clamp = {
+  extrapolateLeft: "clamp" as const,
+  extrapolateRight: "clamp" as const,
+};
 
-const Scene = ({ sceneIndex, opacity }: { sceneIndex: number; opacity: number }) => {
+const Grain = () => {
   const frame = useCurrentFrame();
-  const scene = scenes[sceneIndex % scenes.length];
-  const drift = interpolate(frame % 144, [0, 144], [-2.5, 2.5], {
-    easing: Easing.inOut(Easing.ease),
-  });
-  const push = interpolate(frame % 144, [0, 144], [1.03, 1.1], {
-    easing: Easing.inOut(Easing.ease),
-  });
-  const lightPulse = 0.58 + Math.sin(frame / 12) * 0.1;
+  const specks = Array.from({ length: 100 }, (_, i) => ({
+    x: (i * 47 + frame * (i % 3 + 1)) % 100,
+    y: (i * 71 + frame * (i % 2 + 1)) % 100,
+    size: i % 4 === 0 ? 2 : 1,
+  }));
 
   return (
-    <AbsoluteFill style={{ opacity, overflow: "hidden", background: scene.sky }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: "-5%",
-          transform: `translateX(${drift}%) scale(${push})`,
-          background: `radial-gradient(circle at 70% 22%, ${scene.accent}55, transparent 22%), linear-gradient(180deg, ${scene.sky} 0%, ${scene.ground} 72%, #101614 100%)`,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: "-14%",
-          left: "58%",
-          width: "38%",
-          height: "90%",
-          background: `linear-gradient(110deg, transparent, ${scene.accent}22, transparent)`,
-          transform: `rotate(${12 + drift / 2}deg)`,
-          filter: "blur(18px)",
-          opacity: lightPulse,
-        }}
-      />
-      <div style={{ position: "absolute", left: "-10%", right: "-10%", bottom: "18%", height: "2%", background: "#0c1414", opacity: 0.9 }} />
-      <div style={{ position: "absolute", left: "-5%", right: "-5%", bottom: "0%", height: "20%", background: "linear-gradient(180deg, #192522, #0c1110)" }} />
-      {scene.kind === "bakery" && (
-        <>
-          {[0, 1, 2].map((row) => (
-            <div key={row} style={{ position: "absolute", left: "10%", right: "10%", top: `${25 + row * 13}%`, height: 7, background: "#6f4934", boxShadow: "0 5px 0 #241d19" }} />
-          ))}
-          <div style={{ position: "absolute", left: "17%", top: "12%", width: 110, height: 55, borderRadius: "50%", background: "#d19b58", filter: "blur(3px)", opacity: 0.8 }} />
-        </>
-      )}
-      {scene.kind === "rooftop" && (
-        <>
-          <div style={{ position: "absolute", right: "11%", top: "15%", width: 8, height: "44%", background: "#87918a" }} />
-          <div style={{ position: "absolute", right: "5%", top: "14%", width: 70, height: 28, borderRadius: "50%", background: scene.accent, boxShadow: `0 0 35px ${scene.accent}` }} />
-          <div style={{ position: "absolute", left: "4%", bottom: "18%", width: "92%", height: 12, background: "#516d67" }} />
-        </>
-      )}
-      {scene.kind === "forest" && (
-        <>
-          {[0, 1, 2, 3].map((tree) => (
-            <div key={tree} style={{ position: "absolute", left: `${tree * 31 - 8}%`, top: "8%", width: 90, height: "75%", background: "linear-gradient(90deg, #141b17, #4a4935, #101613)", transform: `rotate(${tree % 2 ? 5 : -4}deg)` }} />
-          ))}
-        </>
-      )}
-      {scene.kind === "desk" && (
-        <>
-          <div style={{ position: "absolute", left: "8%", right: "8%", bottom: "23%", height: 16, background: "#755137" }} />
-          <div style={{ position: "absolute", left: "20%", bottom: "25%", width: 180, height: 115, background: "#b8773e", transform: "rotate(-5deg)", boxShadow: "0 12px 0 #482e28" }} />
-          <div style={{ position: "absolute", right: "19%", bottom: "25%", width: 85, height: 12, background: "#c9b795", transform: "rotate(8deg)" }} />
-        </>
-      )}
-      {particles.map((particle) => (
+    <AbsoluteFill style={{ pointerEvents: "none", opacity: 0.17 }}>
+      {specks.map((s, i) => (
         <div
-          key={particle.left}
+          key={i}
           style={{
             position: "absolute",
-            left: particle.left,
-            top: particle.top,
-            width: particle.size,
-            height: particle.size,
-            borderRadius: "50%",
-            background: scene.accent,
-            opacity: 0.25 + 0.2 * Math.sin((frame + particle.delay) / 14),
-            transform: `translateY(${Math.sin((frame + particle.delay) / 20) * 12}px)`,
+            left: `${s.x}%`,
+            top: `${s.y}%`,
+            width: s.size,
+            height: s.size,
+            background: i % 2 ? "#34271e" : "#fffaf0",
           }}
         />
       ))}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `radial-gradient(ellipse at 50% 40%, transparent 35%, ${scene.sky}99 100%)`,
-          mixBlendMode: "multiply",
-          opacity: 0.35,
-        }}
-      />
     </AbsoluteFill>
   );
 };
 
-const Skeleton = ({ sceneIndex }: { sceneIndex: number }) => {
+const Background = ({
+  accent,
+  background,
+}: {
+  accent: string;
+  background: string;
+}) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const enter = spring({ frame, fps, config: { damping: 18, stiffness: 70 } });
-  const sway = Math.sin(frame / 16) * 2;
-  const pose = sceneIndex % 4;
-  const lift = pose === 1 ? Math.sin(frame / 10) * 8 : 0;
-  const lean = pose === 2 ? -8 : pose === 3 ? 8 : 0;
+  const { width, height } = useVideoConfig();
+  const driftX = interpolate(frame, [0, 240], [-15, 15], {
+    easing: Easing.inOut(Easing.ease),
+    ...clamp,
+  });
+  const driftY = Math.sin(frame / 42) * 18;
+
   return (
-    <div style={{ position: "absolute", left: "50%", top: "43%", width: 250, height: 420, translate: "-50% -50%", transformOrigin: "50% 80%", transform: `translateY(${(1 - enter) * 90 + lift}px) rotate(${sway + lean}deg)`, filter: "drop-shadow(0 14px 8px #0008)" }}>
-      <svg viewBox="0 0 250 420" width="250" height="420">
-        <g fill="none" stroke="#171715" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="125" cy="54" r="38" fill="#ede6d0" />
-          <path d="M106 77 Q125 91 144 77" strokeWidth="5" />
-          <path d="M125 94 L125 222 M84 130 Q125 112 166 130 M88 158 Q125 140 162 158 M88 187 Q125 168 162 187" />
-          <path d={`M125 100 L${pose === 1 ? 54 : 76} ${pose === 1 ? 160 : 196} L${pose === 1 ? 86 : 53} ${pose === 1 ? 286 : 292} M125 100 L${pose === 3 ? 205 : 174} ${pose === 3 ? 160 : 196} L${pose === 3 ? 228 : 199} ${pose === 3 ? 286 : 292}`} />
-          <path d="M125 222 L74 326 L54 405 M125 222 L176 326 L198 405" />
-        </g>
-        <g fill="none" stroke="#ede6d0" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="125" cy="54" r="38" />
-          <path d="M125 94 L125 222 M84 130 Q125 112 166 130 M88 158 Q125 140 162 158 M88 187 Q125 168 162 187" />
-          <path d="M125 100 L76 196 L53 292 M125 100 L174 196 L199 292" />
-          <path d="M125 222 L74 326 L54 405 M125 222 L176 326 L198 405" />
-        </g>
-      </svg>
+    <AbsoluteFill style={{ background }}>
+      <div
+        style={{
+          position: "absolute",
+          width: width * 0.9,
+          height: width * 0.9,
+          left: width * 0.2 + driftX,
+          top: height * 0.07 + driftY,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${accent}22 0%, ${accent}08 34%, transparent 70%)`,
+          filter: "blur(8px)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: width * 0.7,
+          height: width * 0.7,
+          left: -width * 0.35 - driftX / 2,
+          bottom: -width * 0.12,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, #bfac8b25, transparent 70%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 30,
+          border: "1px solid #332a201c",
+          borderRadius: 5,
+        }}
+      />
+      <Grain />
+    </AbsoluteFill>
+  );
+};
+
+const WordBlock: React.FC<{
+  text: string;
+  start: number;
+  accent: string;
+  highlight?: boolean;
+}> = ({ text, start, accent, highlight = false }) => {
+  const frame = useCurrentFrame();
+  const { fps, width } = useVideoConfig();
+  const p = spring({
+    frame: frame - start,
+    fps,
+    config: { damping: 18, stiffness: 105, mass: 0.75 },
+  });
+  const opacity = interpolate(frame - start, [0, 5], [0, 1], clamp);
+  const y = interpolate(p, [0, 1], [52, 0]);
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        maxWidth: width * 0.88,
+        textAlign: "center",
+        opacity,
+        transform: `translateY(${y}px) scale(${interpolate(p, [0, 1], [0.96, 1])})`,
+        color: highlight ? accent : "#211e19",
+        fontFamily: "'Arial Black', Arial, Helvetica, sans-serif",
+        fontSize: highlight ? 88 : 78,
+        fontWeight: 900,
+        lineHeight: 1.02,
+        letterSpacing: "-0.065em",
+        overflowWrap: "break-word",
+        textWrap: "balance",
+      }}
+    >
+      {text}
     </div>
   );
 };
 
-const FilmAtmosphere = () => {
+const Kicker = ({ text, accent }: { text: string; accent: string }) => {
   const frame = useCurrentFrame();
-  const sceneCut = frame % 90;
-  const flare = interpolate(sceneCut, [0, 5, 14, 28], [0, 0.9, 0.12, 0], {
-    extrapolateRight: "clamp",
-    easing: Easing.out(Easing.cubic),
-  });
-  const grain = 0.035 + ((frame * 17) % 10) / 500;
+  const opacity = interpolate(frame, [0, 12], [0, 1], clamp);
+  const tracking = interpolate(frame, [0, 16], [7, 3.5], clamp);
   return (
-    <>
-      <AbsoluteFill style={{ opacity: grain, mixBlendMode: "screen" }}>
-        {grainSpecks.map((speck, index) => (
-          <div key={index} style={{ position: "absolute", left: speck.left, top: speck.top, width: 3, height: 3, borderRadius: "50%", backgroundColor: index % 2 ? "#fff" : "#0b0f0d" }} />
-        ))}
-      </AbsoluteFill>
-      <AbsoluteFill style={{ opacity: flare, background: "linear-gradient(105deg, transparent 18%, #ffd39b88 48%, transparent 70%)", mixBlendMode: "screen" }} />
-      <div style={{ position: "absolute", left: "-12%", top: `${45 + Math.sin(frame / 30) * 3}%`, width: "124%", height: 2, background: "#f4d8ae44", filter: "blur(7px)", transform: `rotate(${-3 + Math.sin(frame / 25)}deg)` }} />
-    </>
+    <div
+      style={{
+        opacity,
+        color: accent,
+        fontFamily: "Arial, Helvetica, sans-serif",
+        fontSize: 19,
+        fontWeight: 800,
+        letterSpacing: tracking,
+        textAlign: "center",
+        marginBottom: 34,
+      }}
+    >
+      {text.toUpperCase()}
+    </div>
   );
 };
 
-export const MyComponent: React.FC<Props> = ({ title = "Even the quiet days matter." }) => {
+const Rule = ({ start, accent }: { start: number; accent: string }) => {
   const frame = useCurrentFrame();
-  const sceneDuration = 90;
-  const sceneIndex = Math.floor(frame / sceneDuration);
-  const localFrame = frame % sceneDuration;
-  const opacity = interpolate(localFrame, [0, 10, 80, 90], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const textIn = interpolate(frame, [8, 28], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const width = interpolate(frame - start, [0, 17], [0, 176], clamp);
+  return (
+    <div
+      style={{
+        margin: "30px auto 24px",
+        height: 5,
+        width,
+        borderRadius: 99,
+        background: accent,
+      }}
+    />
+  );
+};
+
+const SceneGraphic = ({
+  scene,
+  start,
+}: {
+  scene: SceneData;
+  start: number;
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const p = spring({
+    frame: frame - start,
+    fps,
+    config: { damping: 16, stiffness: 100 },
+  });
+  const opacity = interpolate(frame - start, [0, 8], [0, 1], clamp);
+  const y = interpolate(p, [0, 1], [24, 0]);
+
+  if (scene.layout === "steps") {
+    const items = ["ROLE", "CONTEXT", "GOAL"];
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          marginTop: 38,
+          opacity,
+          transform: `translateY(${y}px)`,
+        }}
+      >
+        {items.map((item, i) => (
+          <React.Fragment key={item}>
+            <div
+              style={{
+                padding: "17px 16px",
+                border: `2px solid ${i === 2 ? scene.accent : "#c9bdac"}`,
+                borderRadius: 12,
+                fontFamily: "Arial, sans-serif",
+                fontWeight: 800,
+                fontSize: 18,
+                letterSpacing: 1,
+                color: "#25211b",
+                background: "#fffaf04d",
+              }}
+            >
+              {item}
+            </div>
+            {i < items.length - 1 && (
+              <span style={{ fontSize: 24, color: scene.accent }}>→</span>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+
+  if (scene.layout === "quote") {
+    return (
+      <div
+        style={{
+          opacity,
+          transform: `translateY(${y}px)`,
+          margin: "36px auto 0",
+          maxWidth: 570,
+          padding: "18px 26px",
+          borderLeft: `5px solid ${scene.accent}`,
+          background: "#fffaf04d",
+          color: "#51483d",
+          fontFamily: "Georgia, serif",
+          fontStyle: "italic",
+          fontSize: 29,
+          lineHeight: 1.35,
+        }}
+      >
+        “Show me the kind of answer you want.”
+      </div>
+    );
+  }
+
+  if (scene.layout === "stat") {
+    const amount = Math.round(
+      interpolate(frame - start, [0, 25], [0, 3], clamp),
+    );
+    return (
+      <div
+        style={{
+          opacity,
+          transform: `translateY(${y}px)`,
+          marginTop: 36,
+          display: "flex",
+          justifyContent: "center",
+          gap: 12,
+        }}
+      >
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            style={{
+              width: 70,
+              height: 9,
+              borderRadius: 9,
+              background: i < amount ? scene.accent : "#d6cbbb",
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#111714", fontFamily: "Georgia, serif", color: "#ede6d0" }}>
-      <Audio src={staticFile("narration.wav")} volume={0.7} />
-      <Scene sceneIndex={sceneIndex} opacity={opacity} />
-      <Skeleton sceneIndex={sceneIndex} />
-      <div style={{ position: "absolute", top: 90, left: 52, right: 52, opacity: textIn, fontSize: 34, lineHeight: 1.15, letterSpacing: 1, textShadow: "0 3px 12px #000" }}>{title}</div>
-      <div style={{ position: "absolute", bottom: 80, left: 52, right: 52, fontSize: 20, letterSpacing: 4, opacity: interpolate(frame, [310, 345], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), textTransform: "uppercase" }}>Keep going • follow for more</div>
-      <FilmAtmosphere />
-      <div style={{ position: "absolute", inset: 0, boxShadow: "inset 0 0 120px #050807cc", pointerEvents: "none" }} />
+    <div
+      style={{
+        opacity,
+        margin: "34px auto 0",
+        display: "flex",
+        gap: 12,
+        justifyContent: "center",
+        transform: `translateY(${Math.sin((frame - start) / 8) * 5}px)`,
+      }}
+    >
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          style={{
+            width: 11,
+            height: 11,
+            borderRadius: "50%",
+            background: scene.accent,
+            opacity: 1 - i * 0.2,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+const Progress = ({
+  duration,
+  accent,
+}: {
+  duration: number;
+  accent: string;
+}) => {
+  const frame = useCurrentFrame();
+  const { width } = useVideoConfig();
+  const progress = interpolate(frame, [0, duration - 1], [0, 1], clamp);
+  return (
+    <div style={{ width: "100%" }}>
+      <div
+        style={{
+          height: 4,
+          background: "#30281d18",
+          borderRadius: 20,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${progress * 100}%`,
+            background: accent,
+          }}
+        />
+      </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 16,
+          color: "#777064",
+          fontSize: 15,
+          letterSpacing: 1.4,
+          fontWeight: 800,
+          fontFamily: "Arial, sans-serif",
+        }}
+      >
+        <span>THINK CLEARER.</span>
+        <span>{Math.round(progress * 100).toString().padStart(2, "0")}%</span>
+      </div>
+    </div>
+  );
+};
+
+export const MyComponent: React.FC<Props> = ({
+  title,
+  scenes,
+  accentColor,
+  backgroundColor,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps, width, height, durationInFrames } = useVideoConfig();
+  const safeScenes = scenes?.length ? scenes : defaultScenes;
+  const sceneDuration = durationInFrames / safeScenes.length;
+  const sceneIndex = Math.min(
+    safeScenes.length - 1,
+    Math.floor(frame / sceneDuration),
+  );
+  const sceneStart = Math.floor(sceneIndex * sceneDuration);
+  const localFrame = frame - sceneStart;
+  const scene = safeScenes[sceneIndex];
+  const enter = spring({
+    frame: localFrame,
+    fps,
+    config: { damping: 21, stiffness: 90 },
+  });
+  const fadeOut = interpolate(
+    frame,
+    [sceneStart + sceneDuration - 8, sceneStart + sceneDuration],
+    [1, 0],
+    clamp,
+  );
+  const contentY = interpolate(enter, [0, 1], [18, 0]);
+  const baseAccent = scene.accent || accentColor;
+  const safeTitle = title || "Ideas worth keeping";
+
+  return (
+    <AbsoluteFill style={{ background: backgroundColor, overflow: "hidden" }}>
+      <Background accent={baseAccent} background={backgroundColor} />
+
+      <div
+        style={{
+          position: "absolute",
+          top: height * 0.075,
+          left: width * 0.09,
+          right: width * 0.09,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          color: "#655d52",
+          fontFamily: "Arial, sans-serif",
+          fontSize: 16,
+          fontWeight: 800,
+          letterSpacing: 2,
+        }}
+      >
+        <span>FIELD NOTES / AI</span>
+        <span style={{ color: baseAccent }}>
+          {String(sceneIndex + 1).padStart(2, "0")} /{" "}
+          {String(safeScenes.length).padStart(2, "0")}
+        </span>
+      </div>
+
+      <AbsoluteFill
+        style={{
+          top: "20%",
+          height: "59%",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 6%",
+          opacity: fadeOut,
+          transform: `translateY(${contentY}px)`,
+        }}
+      >
+        <Kicker text={scene.kicker || safeTitle} accent={baseAccent} />
+        <WordBlock
+          text={scene.headline}
+          start={sceneStart}
+          accent={baseAccent}
+        />
+        <WordBlock
+          text={scene.highlight}
+          start={sceneStart + 5}
+          accent={baseAccent}
+          highlight
+        />
+        <Rule start={sceneStart + 9} accent={baseAccent} />
+        <div
+          style={{
+            opacity: interpolate(localFrame, [13, 25], [0, 1], clamp),
+            maxWidth: width * 0.8,
+            textAlign: "center",
+            color: "#5c554b",
+            fontFamily: "Arial, Helvetica, sans-serif",
+            fontSize: 27,
+            lineHeight: 1.38,
+            fontWeight: 500,
+          }}
+        >
+          {scene.subtitle}
+        </div>
+        <SceneGraphic scene={scene} start={sceneStart + 20} />
+      </AbsoluteFill>
+
+      <div
+        style={{
+          position: "absolute",
+          bottom: height * 0.075,
+          left: width * 0.09,
+          right: width * 0.09,
+        }}
+      >
+        <Progress duration={durationInFrames} accent={accentColor} />
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          bottom: height * 0.14,
+          left: width * 0.09,
+          right: width * 0.09,
+          textAlign: "center",
+          fontFamily: "Arial, sans-serif",
+          color: "#887e70",
+          fontSize: 13,
+          letterSpacing: 1.1,
+          opacity: interpolate(
+            frame,
+            [durationInFrames - fps * 2, durationInFrames - fps],
+            [0, 0.75],
+            clamp,
+          ),
+        }}
+      >
+        {safeTitle.toUpperCase()}
+      </div>
     </AbsoluteFill>
   );
 };
+
+export const MyComposition = () => (
+  <Composition
+    id="MyComp"
+    component={MyComponent}
+    durationInFrames={360}
+    fps={30}
+    width={1080}
+    height={1920}
+    defaultProps={defaultShortProps}
+  />
+);
