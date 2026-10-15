@@ -9,6 +9,7 @@ import csv
 import sys
 from datetime import date
 from pathlib import Path
+import re
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -40,6 +41,7 @@ PREVIEW = False
 ACTIVE_TOPIC = None
 OUTPUT_SUFFIX = ""
 SCENE_COUNT = 8
+REMOTION_ROOT = ROOT / "remotion-video"
 
 CONTENT = {
     0: ("Science/space facts", "Why does the Moon always show us the same face?",
@@ -312,7 +314,77 @@ def caption_words(duration: float) -> list[dict]:
     return [{"word": word, "start": i * step, "end": (i + 1) * step} for i, word in enumerate(words)]
 
 
+def render_remotion(duration: float, words: list[dict]) -> None:
+    """Render the editorial motion-design composition and preserve the existing output path."""
+    effective_duration = min(duration, 10.0) if PREVIEW else min(duration, 58.5)
+    fps = 30
+    frames = max(1, int(round(effective_duration * fps)))
+    public_dir = REMOTION_ROOT / "public"
+    public_dir.mkdir(parents=True, exist_ok=True)
+
+    audio_name = f"narration-{TODAY}{OUTPUT_SUFFIX}{'_preview' if PREVIEW else ''}.mp3"
+    public_audio = public_dir / audio_name
+    shutil.copy2(AUDIO, public_audio)
+
+    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\\s+", SCRIPT) if part.strip()]
+    subtitles = [sentences[min(i, len(sentences) - 1)] if sentences else TOPIC for i in range(5)]
+    accents = ["#f06a43", "#f0a35b", "#e76f51", "#c96d4c", "#e9b45e"]
+    layouts = ["hero", "steps", "quote", "stat", "hero"]
+    dynamic_scenes = []
+    available_cards = cards if cards else [
+        TOPIC, "THE KEY IDEA", "WHY IT MATTERS", "ONE TAKEAWAY", "REMEMBER THIS", "FOLLOW FOR MORE"
+    ]
+    for i in range(5):
+        dynamic_scenes.append({
+            "kicker": f"{CATEGORY} / {i + 1:02d}",
+            "headline": str(available_cards[i % len(available_cards)]),
+            "highlight": str(available_cards[(i + 1) % len(available_cards)]),
+            "subtitle": subtitles[i],
+            "accent": accents[i],
+            "layout": layouts[i],
+        })
+
+    props = {
+        "title": TITLE,
+        "scenes": dynamic_scenes,
+        "accentColor": "#e45b35",
+        "backgroundColor": "#f4efe5",
+        "audioFile": audio_name,
+        "captions": words,
+    }
+    props_path = public_dir / f"props-{TODAY}{OUTPUT_SUFFIX}{'_preview' if PREVIEW else ''}.json"
+    props_path.write_text(json.dumps(props, ensure_ascii=False), encoding="utf-8")
+
+    npx = "npx.cmd" if os.name == "nt" else "npx"
+    target_width = 480 if PREVIEW else OUTPUT_WIDTH
+    target_height = int(target_width * OUTPUT_HEIGHT / OUTPUT_WIDTH) // 2 * 2
+    command = [
+        npx, "remotion", "render", "src/index.ts", "MyComp", str(OUT),
+        f"--props={props_path.as_posix()}",
+        f"--duration={frames}",
+        f"--fps={fps}",
+        f"--width={target_width}",
+        f"--height={target_height}",
+        "--codec=h264", "--pixel-format=yuv420p",
+    ]
+    try:
+        log("REMOTION RENDER " + " ".join(command))
+        result = subprocess.run(command, cwd=REMOTION_ROOT, check=False)
+        if result.returncode:
+            raise RuntimeError(f"Remotion render failed with exit code {result.returncode}")
+    finally:
+        for path in (public_audio, props_path):
+            try:
+                path.unlink(missing_ok=True)
+            except OSError as exc:
+                log(f"REMOTION CLEANUP WARNING: {exc}")
+
+
 def render(duration: float, words: list[dict], character_dir: Path) -> None:
+    if CONFIG.get("cinematic", {}).get("renderer", "remotion") == "remotion":
+        render_remotion(duration, words)
+        return
+
     ffmpeg = ffmpeg_path()
     effective_duration = min(duration, 10.0) if PREVIEW else min(duration, 58.5)
     scene_duration = effective_duration / SCENE_COUNT
