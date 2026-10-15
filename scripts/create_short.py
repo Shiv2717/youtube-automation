@@ -587,6 +587,8 @@ def main() -> None:
     history = json.loads(history_path.read_text(encoding="utf-8-sig")) if history_path.exists() else []
     if any(item.get("topic") == TOPIC for item in history) and os.environ.get("SHORTS_ALLOW_REPEAT") != "1":
         raise RuntimeError(f"Topic already used: {TOPIC}")
+    (ROOT / "output").mkdir(parents=True, exist_ok=True)
+    (ROOT / "logs").mkdir(parents=True, exist_ok=True)
     log(f"START {TODAY} category={CATEGORY} topic={TOPIC}")
     asyncio.run(make_voiceover())
     duration = get_audio_duration()
