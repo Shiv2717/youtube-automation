@@ -41,7 +41,7 @@ async def main() -> None:
     if not isinstance(tags, list) or not all(str(tag).strip() for tag in tags):
         raise ValueError("Metadata tags must be a non-empty list")
     history_path = ROOT / "history.json"
-    history = json.loads(history_path.read_text(encoding="utf-8-sig"))
+    history = json.loads(history_path.read_text(encoding="utf-8-sig")) if history_path.exists() else []
     existing = next(
         (item for item in history
          if item.get("date") == TODAY and item.get("topic") == metadata.get("topic")
