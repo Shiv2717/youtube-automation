@@ -239,7 +239,6 @@ async def make_voiceover() -> None:
 def make_cards() -> None:
     if CONFIG["cinematic"].get("style") in {"painterly_warm", "rainy_night", "snowy_dusk"}:
         from cinematic.painterly import make_painterly_scenes
-        from cinematic.painterly import make_painterly_scenes
         make_painterly_scenes(SCENES, WIDTH, HEIGHT, CONFIG["cinematic"]["style"])
         return
     SCENES.mkdir(parents=True, exist_ok=True)
@@ -618,11 +617,15 @@ def main() -> None:
         writer = csv.writer(handle)
         if new_file:
             writer.writerow(["date", "asset", "source", "license"])
-        writer.writerow([TODAY, f"painterly backgrounds ({CONFIG['cinematic']['style']})",
-                         "Pillow procedural artwork", "original/local"])
-        writer.writerow([TODAY, "ambient particle overlays", "Pillow procedural artwork", "original/local"])
-        writer.writerow([TODAY, f"character ({CONFIG['cinematic']['character'].get('type', 'skeleton')})",
-                         "Pillow procedural artwork", "original/local"])
+        if CONFIG.get("cinematic", {}).get("renderer", "remotion") == "remotion":
+            writer.writerow([TODAY, "editorial backgrounds and kinetic typography", "Remotion composition", "original/local"])
+            writer.writerow([TODAY, "word-timed captions", "Faster-Whisper or timing fallback", "generated"])
+        else:
+            writer.writerow([TODAY, f"painterly backgrounds ({CONFIG['cinematic']['style']})",
+                             "Pillow procedural artwork", "original/local"])
+            writer.writerow([TODAY, "ambient particle overlays", "Pillow procedural artwork", "original/local"])
+            writer.writerow([TODAY, f"character ({CONFIG['cinematic']['character'].get('type', 'skeleton')})",
+                             "Pillow procedural artwork", "original/local"])
         writer.writerow([TODAY, "voiceover", "Microsoft Edge TTS", "service terms; no external media"])
     check = quality_check()
     log(f"QUALITY {json.dumps(check)}")
