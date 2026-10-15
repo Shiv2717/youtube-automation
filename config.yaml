@@ -1,0 +1,54 @@
+cinematic:
+  enabled: true
+  style: painterly_warm
+  output_fps: 12
+  cold_open: true
+  motion:
+    ken_burns: true
+    parallax: true
+    handheld_shake: false
+  transitions:
+    enabled: true
+    duration: 0.8
+    sequence: [fade]
+  text:
+    enabled: true
+    keyword_highlight: true
+    font_size: 64
+  look:
+    grade: painterly_warm
+    letterbox: false
+    vignette: true
+    film_grain: true
+    soft_bloom: true
+  character:
+    enabled: true
+    type: skeleton
+    pose: sitting
+    fps: 12
+    color: "#EDE6D0"
+  ambient:
+    enabled: true
+    rain: true
+    snow: true
+    dust: true
+    steam: true
+    embers: true
+  reference_match:
+    dark_painted_backgrounds: true
+    scene_pose_changes: true
+    show_prompt_text: false
+  audio:
+    duck_music: true
+    loudness: -16
+  pacing:
+    pattern_interrupt_seconds: 10
+  preview:
+    width: 480
+    height: 854
+  extras:
+    thumbnails: true
+    srt: true
+assets:
+  music_dir: assets/music
+  sound_effects_dir: assets/sfx
