@@ -1,7 +1,19 @@
 # Shorts Bot
 
-The generator creates a narrated vertical Short locally, renders it with FFmpeg,
-and can upload it through the existing YouTube Studio browser flow.
+The generator creates narrated Shorts locally, renders the visual layer with Remotion's animated editorial composition (or the legacy FFmpeg renderer), validates the final MP4, and uploads it through the existing YouTube Studio browser flow.
+
+## One-time setup for the Remotion renderer
+
+Install Node.js LTS, then run:
+
+```powershell
+cd remotion-video
+npm install
+npm run studio
+cd ..
+```
+
+The default `cinematic.renderer` setting is `remotion`. Set it to `ffmpeg` in `config.yaml` to use the legacy renderer. The Remotion render consumes the same topic, generated narration, and word timestamps from the Python pipeline.
 
 ## Commands
 
@@ -28,7 +40,8 @@ The default output is 9:16; `--format 16:9` writes a separate `_169` output.
 
 Edit [config.yaml](config.yaml):
 
-- `cinematic.style`: `painterly_warm`, `rainy_night`, or `snowy_dusk`.
+- `cinematic.renderer`: `remotion` (editorial motion design) or `ffmpeg` (legacy pipeline).
+- `cinematic.style`: `painterly_warm`, `rainy_night`, or `snowy_dusk` (used by the legacy FFmpeg renderer).
 - `cinematic.character.type`, `pose`, `color`, `fps`, `enabled`: character layer controls.
 - `cinematic.ambient.enabled`, `rain`, `snow`, `dust`, `steam`, `embers`: loop overlays.
 - `cinematic.motion.ken_burns` and `parallax`: gentle camera movement controls.
@@ -53,9 +66,5 @@ does not currently contain a GitHub Actions workflow; automation is configured
 through Windows Task Scheduler.
 ### Reference-style painterly output
 
-The default `painterly_warm` preset now renders at 12 fps with a dark,
-hand-painted background treatment and a separate cream skeleton layer. Scene
-prompts are used only to compose original artwork; they are not printed into
-the frames. Set `cinematic.output_fps` in `config.yaml` if a different cadence
-is required. The supplied reference is used only as a style target: the
+The Remotion renderer uses a cream editorial-paper palette, kinetic typography, scene-specific accent colors, animated visual motifs, word-timed captions, and the generated narration. The legacy `painterly_warm` renderer remains available if you prefer its dark hand-painted background and skeleton character. The supplied reference is used only as a style target: the
 generated scenes and character remain original.
