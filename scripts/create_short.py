@@ -545,19 +545,23 @@ def main() -> None:
     duration = get_audio_duration()
     words = caption_words(duration)
     WORDS.write_text(json.dumps(words, indent=2), encoding="utf-8")
-    make_cards()
-    character_cfg = CONFIG["cinematic"].get("character", {})
     character_dir = ROOT / "output" / f"{TODAY}{suffix}_character"
-    if character_cfg.get("enabled", True):
-        color = tuple(int(character_cfg.get("color", "#EDE6D0")[i:i + 2], 16) for i in (1, 3, 5)) + (255,)
-        make_frames(character_dir, character_cfg.get("pose", "sitting"), color,
-                    fps=character_cfg.get("fps", 12))
+    if CONFIG.get("cinematic", {}).get("renderer", "remotion") == "remotion":
+        # Remotion supplies its own animated backgrounds and graphics.
+        render(duration, words, character_dir)
     else:
-        make_character_frames()
-    ambient_dir = ROOT / "output" / f"{TODAY}{suffix}_ambient"
-    if CONFIG["cinematic"].get("ambient", {}).get("enabled", True):
-        make_ambient_frames(ambient_dir, WIDTH, HEIGHT, CONFIG["cinematic"]["style"])
-    render(duration, words, character_dir)
+        make_cards()
+        character_cfg = CONFIG["cinematic"].get("character", {})
+        if character_cfg.get("enabled", True):
+            color = tuple(int(character_cfg.get("color", "#EDE6D0")[i:i + 2], 16) for i in (1, 3, 5)) + (255,)
+            make_frames(character_dir, character_cfg.get("pose", "sitting"), color,
+                        fps=character_cfg.get("fps", 12))
+        else:
+            make_character_frames()
+        ambient_dir = ROOT / "output" / f"{TODAY}{suffix}_ambient"
+        if CONFIG["cinematic"].get("ambient", {}).get("enabled", True):
+            make_ambient_frames(ambient_dir, WIDTH, HEIGHT, CONFIG["cinematic"]["style"])
+        render(duration, words, character_dir)
     if CONFIG["cinematic"]["extras"].get("srt"):
         write_srt(ROOT / "output" / f"{TODAY}{suffix}.srt", words)
     if CONFIG["cinematic"]["extras"].get("thumbnails"):
