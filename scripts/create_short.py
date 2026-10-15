@@ -17,15 +17,52 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from cinematic.audio import voice_filter
-from cinematic.captions import write_srt
-from cinematic.character import make_frames
-from cinematic.config import load_config
-from cinematic.extras import make_thumbnails
-from cinematic.look import filters as look_filters
-from cinematic.motion import position_expression, zoom_expression
-from cinematic.painterly import make_ambient_frames, make_painterly_scenes
-from cinematic.transitions import transition_sequence
+try:
+    from cinematic.config import load_config
+except ModuleNotFoundError:
+    import yaml
+
+    def load_config(root: Path) -> dict:
+        config_path = root / "config.yaml"
+        with config_path.open("r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid YAML configuration: {config_path}")
+        return data
+
+
+try:
+    from cinematic.captions import write_srt
+except ModuleNotFoundError:
+    def write_srt(path: Path, words: list[dict]) -> None:
+        def stamp(seconds: float) -> str:
+            milliseconds = int(max(0, seconds) * 1000)
+            hours, remainder = divmod(milliseconds, 3_600_000)
+            minutes, remainder = divmod(remainder, 60_000)
+            secs, millis = divmod(remainder, 1000)
+            return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
+
+        entries = []
+        for index, item in enumerate(words, start=1):
+            start = float(item.get("start", 0))
+            end = max(start + 0.08, float(item.get("end", start + 0.08)))
+            entries.append(f"{index}\\n{stamp(start)} --> {stamp(end)}\\n{item.get('word', '')}")
+        Path(path).write_text("\\n\\n".join(entries) + "\\n", encoding="utf-8")
+
+
+try:
+    from cinematic.extras import make_thumbnails
+except ModuleNotFoundError:
+    def make_thumbnails(scene_dir: Path, output_dir: Path, title: str) -> None:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        target = output_dir / "thumbnail.jpg"
+        subprocess.run(
+            [ffmpeg_path(), "-y", "-ss", "0.5", "-i", str(OUT), "-frames:v", "1", str(target)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
 
 TODAY = date.today().isoformat()
 LOG = ROOT / "logs" / f"{TODAY}.log"
@@ -201,6 +238,7 @@ async def make_voiceover() -> None:
 
 def make_cards() -> None:
     if CONFIG["cinematic"].get("style") in {"painterly_warm", "rainy_night", "snowy_dusk"}:
+        from cinematic.painterly import make_painterly_scenes
         make_painterly_scenes(SCENES, WIDTH, HEIGHT, CONFIG["cinematic"]["style"])
         return
     SCENES.mkdir(parents=True, exist_ok=True)
@@ -537,7 +575,7 @@ def main() -> None:
     WORDS = ROOT / "output" / f"{TODAY}{suffix}_words.json"
     SCENES = ROOT / "output" / f"{TODAY}{suffix}_scenes"
     history_path = ROOT / "history.json"
-    history = json.loads(history_path.read_text(encoding="utf-8-sig"))
+    history = json.loads(history_path.read_text(encoding="utf-8-sig")) if history_path.exists() else []
     if any(item.get("topic") == TOPIC for item in history) and os.environ.get("SHORTS_ALLOW_REPEAT") != "1":
         raise RuntimeError(f"Topic already used: {TOPIC}")
     log(f"START {TODAY} category={CATEGORY} topic={TOPIC}")
