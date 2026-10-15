@@ -1,17 +1,33 @@
-# Remotion video composition
+# Remotion cinematic renderer
 
-This folder contains an editable 9:16 Remotion composition for cinematic editorial-style Shorts.
+This project renders the visual composition used by the daily Shorts automation.
 
-## Run locally
+## One-time setup
 
-Install Node.js (LTS), then from this directory install the dependencies used by your Remotion project and run the Remotion Studio entrypoint configured by your project. The repository currently tracks the composition source, but does not track a package.json/lockfile, so the project manifest must be created or restored before it can be rendered from a clean checkout.
+Install Node.js LTS, then run:
 
-The composition uses only React and Remotion core APIs. It does not require narration.wav or external stock assets.
+```bash
+cd remotion-video
+npm install
+npm run studio
+```
 
-## Dynamic content
+The Studio preview uses example data. The automation passes the real title, scene cards, narration audio and word timestamps to each render.
 
-Pass `title`, `scenes`, `accentColor` and `backgroundColor` props to `MyComponent`. Each scene has `kicker`, `headline`, `highlight`, `subtitle`, `accent` and `layout` fields. Supported layouts are `hero`, `steps`, `quote` and `stat`.
+## Daily pipeline
 
-## Important
+From the repository root, the existing scheduled workflow remains:
 
-The main daily automation currently renders the production video through the Python/FFmpeg pipeline in `scripts/create_short.py`. This Remotion composition is not automatically used by that pipeline yet. Switching daily uploads to Remotion requires adding a renderer/Node manifest and wiring generated topic, narration and caption data into a Remotion render step, followed by the existing video validation and uploader.
+```powershell
+python scripts\daily_run.py
+```
+
+The default `config.yaml` renderer is `remotion`. To use the legacy FFmpeg renderer, set `cinematic.renderer: ffmpeg`.
+
+Remotion output keeps the expected date-based output filename so the existing validation and YouTube uploader continue to work. The pipeline copies the generated narration into Remotion's public directory for the render and deletes that temporary copy afterwards.
+
+## Dynamic scene schema
+
+Pass `title`, `scenes`, `accentColor`, `backgroundColor`, `audioFile` and `captions` as input props. Each scene has `kicker`, `headline`, `highlight`, `subtitle`, `accent` and `layout`. Supported layouts are `hero`, `steps`, `quote` and `stat`.
+
+The component is designed for portrait 9:16 Shorts and can also be rendered in 16:9 through the existing CLI flag. First render may take longer while Remotion bundles the React project.
