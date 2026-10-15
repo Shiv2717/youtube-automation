@@ -86,16 +86,16 @@ const WordBlock: React.FC<{ text: string; start: number; accent: string; highlig
   const opacity = interpolate(frame - start, [0, 5], [0, 1], clamp);
   const y = interpolate(p, [0, 1], [52, 0]);
   return (
-    <div style={{ width: "100%", maxWidth: width * 0.88, textAlign: "center", opacity, transform: `translateY(${y}px) scale(${interpolate(p, [0, 1], [0.96, 1])})`, color: highlight ? accent : "#211e19", fontFamily: "'Arial Black', Arial, Helvetica, sans-serif", fontSize: highlight ? 88 : 78, fontWeight: 900, lineHeight: 1.02, letterSpacing: "-0.065em", overflowWrap: "break-word", textWrap: "balance" }}>
+    <div style={{ width: "100%", maxWidth: width * 0.88, textAlign: "center", opacity, transform: `translateY(${y}px) scale(${interpolate(p, [0, 1], [0.96, 1])})`, color: highlight ? accent : "#211e19", fontFamily: "'Arial Black', Arial, Helvetica, sans-serif", fontSize: highlight ? 88 : 78, fontWeight: 900, lineHeight: 1.02, letterSpacing: "-0.065em", overflowWrap: "break-word" }}>
       {text}
     </div>
   );
 };
 
-const Kicker = ({ text, accent }: { text: string; accent: string }) => {
+const Kicker = ({ text, accent, start }: { text: string; accent: string; start: number }) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 12], [0, 1], clamp);
-  const tracking = interpolate(frame, [0, 16], [7, 3.5], clamp);
+  const opacity = interpolate(frame - start, [0, 12], [0, 1], clamp);
+  const tracking = interpolate(frame - start, [0, 16], [7, 3.5], clamp);
   return <div style={{ opacity, color: accent, fontFamily: "Arial, Helvetica, sans-serif", fontSize: 19, fontWeight: 800, letterSpacing: tracking, textAlign: "center", marginBottom: 34 }}>{text.toUpperCase()}</div>;
 };
 
@@ -184,7 +184,7 @@ export const MyComponent: React.FC<Props> = ({ title, scenes, accentColor, backg
         <span style={{ color: baseAccent }}>{String(sceneIndex + 1).padStart(2, "0")} / {String(safeScenes.length).padStart(2, "0")}</span>
       </div>
       <AbsoluteFill style={{ top: "20%", height: "59%", alignItems: "center", justifyContent: "center", padding: "0 6%", opacity: fadeOut, transform: `translateY(${contentY}px)` }}>
-        <Kicker text={scene.kicker || safeTitle} accent={baseAccent} />
+        <Kicker text={scene.kicker || safeTitle} accent={baseAccent} start={sceneStart} />
         <WordBlock text={scene.headline} start={sceneStart} accent={baseAccent} />
         <WordBlock text={scene.highlight} start={sceneStart + 5} accent={baseAccent} highlight />
         <Rule start={sceneStart + 9} accent={baseAccent} />
