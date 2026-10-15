@@ -46,8 +46,8 @@ except ModuleNotFoundError:
         for index, item in enumerate(words, start=1):
             start = float(item.get("start", 0))
             end = max(start + 0.08, float(item.get("end", start + 0.08)))
-            entries.append(f"{index}\\n{stamp(start)} --> {stamp(end)}\\n{item.get('word', '')}")
-        Path(path).write_text("\\n\\n".join(entries) + "\\n", encoding="utf-8")
+            entries.append(f"{index}\n{stamp(start)} --> {stamp(end)}\n{item.get('word', '')}")
+        Path(path).write_text("\n\n".join(entries) + "\n", encoding="utf-8")
 
 
 try:
@@ -239,6 +239,7 @@ async def make_voiceover() -> None:
 def make_cards() -> None:
     if CONFIG["cinematic"].get("style") in {"painterly_warm", "rainy_night", "snowy_dusk"}:
         from cinematic.painterly import make_painterly_scenes
+        from cinematic.painterly import make_painterly_scenes
         make_painterly_scenes(SCENES, WIDTH, HEIGHT, CONFIG["cinematic"]["style"])
         return
     SCENES.mkdir(parents=True, exist_ok=True)
@@ -364,7 +365,7 @@ def render_remotion(duration: float, words: list[dict]) -> None:
     public_audio = public_dir / audio_name
     shutil.copy2(AUDIO, public_audio)
 
-    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\\s+", SCRIPT) if part.strip()]
+    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", SCRIPT) if part.strip()]
     subtitles = [sentences[min(i, len(sentences) - 1)] if sentences else TOPIC for i in range(5)]
     accents = ["#f06a43", "#f0a35b", "#e76f51", "#c96d4c", "#e9b45e"]
     layouts = ["hero", "steps", "quote", "stat", "hero"]
@@ -588,6 +589,8 @@ def main() -> None:
         # Remotion supplies its own animated backgrounds and graphics.
         render(duration, words, character_dir)
     else:
+        from cinematic.character import make_frames
+        from cinematic.painterly import make_ambient_frames
         make_cards()
         character_cfg = CONFIG["cinematic"].get("character", {})
         if character_cfg.get("enabled", True):
