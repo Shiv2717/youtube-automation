@@ -357,6 +357,10 @@ def render_remotion(duration: float, words: list[dict]) -> None:
     effective_duration = min(duration, 10.0) if PREVIEW else min(duration, 58.5)
     fps = 30
     frames = max(1, int(round(effective_duration * fps)))
+    if not (REMOTION_ROOT / "node_modules" / "remotion" / "package.json").exists():
+        raise RuntimeError(
+            "Remotion dependencies are missing. Run 'npm install' inside remotion-video first."
+        )
     public_dir = REMOTION_ROOT / "public"
     public_dir.mkdir(parents=True, exist_ok=True)
 
