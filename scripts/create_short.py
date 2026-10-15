@@ -424,6 +424,11 @@ def render(duration: float, words: list[dict], character_dir: Path) -> None:
         render_remotion(duration, words)
         return
 
+    from cinematic.audio import voice_filter
+    from cinematic.look import filters as look_filters
+    from cinematic.motion import position_expression, zoom_expression
+    from cinematic.transitions import transition_sequence
+
     ffmpeg = ffmpeg_path()
     effective_duration = min(duration, 10.0) if PREVIEW else min(duration, 58.5)
     scene_duration = effective_duration / SCENE_COUNT
