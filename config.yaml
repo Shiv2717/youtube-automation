@@ -1,6 +1,7 @@
 cinematic:
   enabled: true
   style: painterly_warm
+  renderer: remotion  # remotion for kinetic editorial design; ffmpeg for legacy renderer
   output_fps: 12
   cold_open: true
   motion:
