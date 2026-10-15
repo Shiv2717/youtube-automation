@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node / Remotion
+node_modules/
+remotion-video/node_modules/
+remotion-video/public/narration-*.mp3
+remotion-video/public/props-*.json
+
+# Generated output and logs
+output/
+logs/
+history.json
+
+# Local credentials and environment
+.env
+.env.*
+token.json
+credentials.json
+youtube-oauth*.json
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
